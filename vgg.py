@@ -33,7 +33,6 @@ class VGG(nn.Module):
         self.num_classes = num_classes
         self.num_features = 4096
         self.drop_rate = drop_rate
-        self.grad_checkpointing = False
         self.use_norm = norm_layer is not None
         self.feature_info = []
         prev_chs = in_chans
@@ -57,6 +56,8 @@ class VGG(nn.Module):
         self.features = nn.Sequential(*layers)
         self.feature_info.append(dict(num_chs=prev_chs, reduction=net_stride, module=f'features.{len(layers) - 1}'))
 
+        # technically u need one more linear layer but since it's just classification it should be fine
+        # https://towardsdatascience.com/understanding-and-visualizing-resnets-442284831be8
         self.head = nn.Sequential(
             nn.Flatten(1),
             nn.Dropout(self.drop_rate),
@@ -67,10 +68,6 @@ class VGG(nn.Module):
         )
 
         self._initialize_weights()
-
-    @torch.jit.ignore
-    def get_classifier(self):
-        return self.head.fc
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.features(x)
@@ -103,3 +100,13 @@ if __name__ == "__main__":
     model = create_vgg('vgg16')
     print("creating vgg19")
     model = create_vgg('vgg19')
+
+    # sanity
+    test = torch.zeros((5, 3, 256, 256))
+    out = model(test)
+    print(out.shape)
+
+    # total parameters
+    pytorch_total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    print(pytorch_total_params)
+
