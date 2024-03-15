@@ -1,4 +1,4 @@
-"""Efficient
+"""Efficientnet
 Adapted from https://github.com/huggingface/pytorch-image-models/blob/main/timm/models/efficientnet.py
 """
 from functools import partial

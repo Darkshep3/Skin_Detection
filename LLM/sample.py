@@ -5,8 +5,8 @@ import os
 
 device = torch.device("cuda" if (torch.cuda.is_available()) else "cpu")
 # model_id = "mistralai/Mistral-7B-v0.1"
-# model_id = "Rocketknight1/falcon-rw-1b"
-model_id = "D:\Allen_2023\model_weights\llama-7b"
+model_id = "tiiuae/falcon-7b"
+# model_id = "D:\Allen_2023\model_weights\llama-7b"
 
 cache_dir="D:\Allen_2023\model_weights"
 

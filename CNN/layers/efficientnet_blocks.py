@@ -12,17 +12,6 @@ def num_groups(group_size, channels):
 
 
 class SqueezeExcite(nn.Module):
-    """ Squeeze-and-Excitation w/ specific features for EfficientNet/MobileNet family
-
-    Args:
-        in_chs (int): input channels to layer
-        rd_ratio (float): ratio of squeeze reduction
-        act_layer (nn.Module): activation layer of containing block
-        gate_layer (Callable): attention gate function
-        force_act_layer (nn.Module): override block's activation fn if this is set/bound
-        rd_round_fn (Callable): specify a fn to calculate rounding of reduced chs
-    """
-
     def __init__(
             self, in_chs, rd_ratio=0.25, rd_channels=None, act_layer=nn.ReLU,
             gate_layer=nn.Sigmoid, force_act_layer=None, rd_round_fn=None):
@@ -45,10 +34,6 @@ class SqueezeExcite(nn.Module):
 
 
 class DepthwiseSeparableConv(nn.Module):
-    """ DepthwiseSeparable block
-    Used for DS convs in MobileNet-V1 and in the place of IR blocks that have no expansion
-    (factor of 1.0). This is an alternative to having a IR with an optional first pw conv.
-    """
     def __init__(
             self, in_chs, out_chs, dw_kernel_size=3, stride=1, dilation=1, group_size=1, pad_type='',
             noskip=False, pw_kernel_size=1, pw_act=False, act_layer=nn.ReLU, norm_layer=nn.BatchNorm2d,
@@ -89,15 +74,6 @@ class DepthwiseSeparableConv(nn.Module):
 
 
 class InvertedResidual(nn.Module):
-    """ Inverted residual block w/ optional SE
-
-    Originally used in MobileNet-V2 - https://arxiv.org/abs/1801.04381v4, this layer is often
-    referred to as 'MBConv' for (Mobile inverted bottleneck conv) and is also used in
-      * MNasNet - https://arxiv.org/abs/1807.11626
-      * EfficientNet - https://arxiv.org/abs/1905.11946
-      * MobileNet-V3 - https://arxiv.org/abs/1905.02244
-    """
-
     def __init__(
             self, in_chs, out_chs, dw_kernel_size=3, stride=1, dilation=1, group_size=1, pad_type='',
             noskip=False, exp_ratio=1.0, exp_kernel_size=1, pw_kernel_size=1, act_layer=nn.ReLU,

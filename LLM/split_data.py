@@ -7,7 +7,7 @@ import csv
 
 path = "D:\Allen_2023\LLM\Skin_Disease_Classes_v3.csv"
 
-ratio = [0.8, 0.2]
+ratio = [0.7, 0.3]
 
 total = 0
 
@@ -53,12 +53,12 @@ split = {
     'classes': classes
 }
 
-with open('split_descriptions_v3.pickle', 'wb') as handle:
+with open('split_descriptions_v4.pickle', 'wb') as handle:
     pickle.dump(split, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 #### test splits
-with open('split_descriptions_v3.pickle', 'rb') as handle:
+with open('split_descriptions_v4.pickle', 'rb') as handle:
     total = pickle.load(handle)
     
     

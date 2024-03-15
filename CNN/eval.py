@@ -10,6 +10,8 @@ from torchvision import models
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+import seaborn as sns
+import numpy as np
 
 checkpoint = "D:\\Allen_2023\\final_models\\dataset_final\\Resolution\\O1_146.pth"
 batch_size = 150
@@ -18,6 +20,7 @@ device = torch.device("cuda" if (torch.cuda.is_available()) else "cpu")
 criterion = nn.CrossEntropyLoss()
 image_path = "D:\Allen_2023\IMG_CLASSES_FINAL"
 torch.hub.set_dir("D:\Allen_2023\model_weights")
+TOP = 5
 
 if __name__ == '__main__':
     val_dataset = LoadSkinDiseaseFinal(image_path, split="val", indexes = "D:\Allen_2023\CNN\split_final.pickle", size = 300)
@@ -50,7 +53,10 @@ if __name__ == '__main__':
 
             pred = model(image)
 
-            top_3 = torch.argsort(pred.data, 1, descending=True)[:,:5]
+            top_3 = torch.argsort(pred.data, 1, descending=True)[:,:TOP]
+            # top_3 = 25-top_3 # uncomment if trained on linux
+
+
             for i in range(top_3.shape[0]):
                 if label[i] in top_3[i]:
                     top_3_correct += 1
@@ -59,6 +65,9 @@ if __name__ == '__main__':
             epoch_loss += loss
             _, predicted = torch.max(pred.data, 1)
             total += label.size(0)
+            # predicted = 25-predicted # uncomment if trained on linux
+
+
             correct += (predicted == label).sum()
 
             pred_list += predicted.flatten().tolist()
@@ -72,5 +81,7 @@ if __name__ == '__main__':
     print("Top 3 Accuracy: ", acc_3)
 
     cm = confusion_matrix(pred_list, target_list)
-    ConfusionMatrixDisplay(cm, display_labels=val_dataset.classes.values()).plot(xticks_rotation='vertical', colorbar=False)
+    cmn = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+    # ConfusionMatrixDisplay(cm, display_labels=val_dataset.classes.values()).plot(xticks_rotation='vertical', colorbar=False)
+    sns.heatmap(cmn, annot=True, fmt='.2f', xticklabels=val_dataset.classes.values(), yticklabels=val_dataset.classes.values(), cmap = 'viridis')
     plt.show()

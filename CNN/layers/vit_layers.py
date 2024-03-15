@@ -8,8 +8,6 @@ import torch.nn.functional as F
 from layers.vit_utils import drop_path
 
 class PatchEmbed(nn.Module):
-    """ 2D Image to Patch Embedding
-    """
     dynamic_img_pad: torch.jit.Final[bool]
 
     def __init__(
@@ -57,8 +55,6 @@ class PatchEmbed(nn.Module):
         return x
 
 class Mlp(nn.Module):
-    """ MLP as used in Vision Transformer, MLP-Mixer and related networks
-    """
     def __init__(
             self,
             in_features,
@@ -94,8 +90,6 @@ class Mlp(nn.Module):
         return x
 
 class DropPath(nn.Module):
-    """Drop paths (Stochastic Depth) per sample  (when applied in main path of residual blocks).
-    """
     def __init__(self, drop_prob: float = 0., scale_by_keep: bool = True):
         super(DropPath, self).__init__()
         self.drop_prob = drop_prob
@@ -108,9 +102,6 @@ class DropPath(nn.Module):
         return f'drop_prob={round(self.drop_prob,3):0.3f}'
 
 class PatchDropout(nn.Module):
-    """
-    https://arxiv.org/abs/2212.00794
-    """
     return_indices: torch.jit.Final[bool]
 
     def __init__(

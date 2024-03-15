@@ -122,7 +122,7 @@ class LoadSkinDiseaseFinal(Dataset):
                 Transforms.RandomHorizontalFlip(),
                 Transforms.RandomVerticalFlip(),
                 Transforms.GaussianBlur(7),
-                Transforms.Resize(size = (240, 240), antialias=True, 
+                Transforms.Resize(size = (320, 320), antialias=True, 
                                 interpolation = InterpolationMode.BICUBIC),
                 Transforms.RandomRotation(89),
                 Transforms.RandomCrop(size = (self.size, self.size)),

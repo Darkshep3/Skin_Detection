@@ -1,4 +1,4 @@
-"""VGG
+"""Resnet
 Adapted from https://github.com/huggingface/pytorch-image-models/blob/main/timm/models/resnet.py
 """
 

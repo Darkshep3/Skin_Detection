@@ -1,13 +1,14 @@
 from peft import LoraConfig, get_peft_model, TaskType 
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
-from dataset import SkinDiseaseDataset
+from dataset import SkinDiseaseDataset, WINDOW
 import torch
 import torch.nn as nn
 from tqdm import tqdm
+import copy
 
 batch_size = 2
 learning_rate = 1e-4
-num_epochs = 30
+num_epochs = 50
 
 LORA_R = 16 
 LORA_ALPHA = 32
@@ -20,7 +21,7 @@ lora_config = LoraConfig (
     task_type = TaskType.SEQ_CLS,
     bias = "none",
 )
-experiment_name = 'llama-lora-pred5'
+experiment_name = 'llama-lora-pred1-coo'
 
 device = torch.device("cuda" if (torch.cuda.is_available()) else "cpu")
 # model_id = "mistralai/Mistral-7B-v0.1"
@@ -38,12 +39,14 @@ if __name__ == '__main__':
     tokenizer.pad_token_id = tokenizer.eos_token_id
     tokenizer.pad_token = tokenizer.eos_token
     
-    train_dataset = SkinDiseaseDataset(path, tokenizer, "train")
+    train_dataset = SkinDiseaseDataset(path, tokenizer, split="train")
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size,
                     shuffle=True, pin_memory=True, drop_last=True)
-    val_dataset = SkinDiseaseDataset(path, tokenizer, "val")
+    val_dataset = SkinDiseaseDataset(path, tokenizer, split="val")
     val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size,
                     pin_memory=True)
+    
+    class_map = dict((v,k) for k,v in val_dataset.classes.items())
 
     print(len(train_dataset), len(val_dataset))
 
@@ -107,11 +110,35 @@ if __name__ == '__main__':
         with torch.no_grad():
             for i, data in enumerate(val_loader):
 
-                input_ids = data['input_ids'].to(device)
-                attention_mask = data['attention_mask'].to(device)
-                labels = data['labels'].to(device)
-                outputs = model(input_ids, attention_mask=attention_mask, labels=labels)
-                
+                initial_path = [list(val_dataset.classes.keys()), list(val_dataset.classes.keys())] # batch size
+                while len(initial_path[0]) > WINDOW:
+                    input_ids = []
+                    attn_mask = []
+                    for index, path in enumerate(initial_path):
+                        path = " Top Choices: [" +  (", ".join(path)) + "]"
+                        path = val_dataset.to_token(path)
+                        input_ids.append(torch.unsqueeze(torch.cat((data['input_ids'][index], torch.tensor(path[0]))),0))
+                        attn_mask.append(torch.unsqueeze(torch.cat((data['attention_mask'][index], torch.tensor(path[1]))),0))
+
+                    input_ids = torch.cat(input_ids,0).to(device)
+                    attention_mask = torch.cat(attn_mask,0).to(device)
+                    labels = data['labels'].to(device)
+                    outputs = model(input_ids, attention_mask=attention_mask, labels=labels)
+
+                    new_path = []
+                    for index, pred in enumerate(outputs[1].data):
+                        to_delete = initial_path[index]
+                        eliminated = 0
+                        top_n = torch.argsort(pred, descending=False)
+                        for i in top_n:
+                            if class_map[int(i)] in to_delete:
+                                to_delete.remove(class_map[int(i)])
+                                eliminated += 1
+                            if eliminated >= WINDOW:
+                                break
+                        new_path.append(to_delete)
+                    initial_path = copy.deepcopy(new_path)
+
                 loss = outputs[0]
 
                 epoch_loss+= loss
